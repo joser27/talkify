@@ -7,7 +7,7 @@ def yourFunction(request, context):
     
     # Import the module and collect data 
     inspector = Inspector()
-    inspector.inspectAll()
+    inspector.inspectMinimal()
 
     # Add custom message and finish the function
     if ('name' in request):
@@ -17,3 +17,10 @@ def yourFunction(request, context):
     
     inspector.inspectAllDeltas()
     return inspector.finish()
+
+if __name__ == "__main__":
+    request = {"name": "TestUser"}
+    context = None 
+    print(yourFunction(request, context))
+
+

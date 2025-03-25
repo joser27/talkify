@@ -446,3 +446,12 @@ class Inspector:
         self.addTimeStamp('runtime')
         self.__attributes['endTime'] = int(round(time.time() * 1000))
         return self.__attributes
+
+    def inspectMinimal(self):
+        """
+        Inspect only the minimal necessary attributes.
+        """
+        self.inspectContainer()
+        self.inspectPlatform()
+        self.inspectMemory()
+        self.addTimeStamp("minimalInspectionRuntime") 
