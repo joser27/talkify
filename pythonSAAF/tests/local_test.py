@@ -1,7 +1,8 @@
 import json
 import logging
 import os
-from handler import yourFunction
+from pythonSAAF.src.handler import lambda_handler
+
 
 def setup_logging():
     logging.basicConfig(
@@ -19,7 +20,7 @@ def test_pdf_processing(file_path, save_output=False):
     
     try:
         # Process the file
-        result = yourFunction(event, None)
+        result = lambda_handler(event, None)
         
         # Display results
         logger.info("\nProcessing Results:")
@@ -39,18 +40,14 @@ def test_pdf_processing(file_path, save_output=False):
         raise
 
 if __name__ == "__main__":
-    import sys
-    import argparse
-    
     setup_logging()
     
-    parser = argparse.ArgumentParser()
-    parser.add_argument("pdf_file", help="Path to PDF file for testing")
-    parser.add_argument("--save", action="store_true", help="Save extracted text to file")
-    args = parser.parse_args()
+    # Hard-coded file path
+    file_path = "/home/joser27/Documents/code/talkify/pythonSAAF/tests/test_data/sample.pdf"
+    save_output = True  # Set to True if you want to save the extracted text
     
-    if not os.path.exists(args.pdf_file):
-        logging.error(f"File not found: {args.pdf_file}")
-        sys.exit(1)
+    if not os.path.exists(file_path):
+        logging.error(f"File not found: {file_path}")
+        exit(1)
         
-    test_pdf_processing(args.pdf_file, save_output=args.save)
+    test_pdf_processing(file_path, save_output=save_output)

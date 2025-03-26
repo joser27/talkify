@@ -1,0 +1,5 @@
+aws lambda publish-layer-version \
+    --layer-name pypdf2-deps \
+    --description "PyPDF2 and other dependencies" \
+    --zip-file fileb://pypdf2_layer.zip \
+    --compatible-runtimes python3.13
