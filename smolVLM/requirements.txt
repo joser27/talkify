@@ -1,0 +1,13 @@
+#requirements.txt
+
+torch>=2.0.0
+transformers>=4.37.0
+Pillow>=10.0.0
+numpy>=1.24.0
+accelerate>=0.26.0
+# for better performance
+bitsandbytes  # For 4/8-bit quantization
+# Removing flash-attn as it's not easily compatible with Windows
+
+
+
