@@ -4,10 +4,52 @@ import PyPDF2
 import io
 import logging
 import urllib.parse
+from botocore.exceptions import ClientError
 
 # Set up logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+def generate_audio_and_url(text, bucket_name, key_base):
+    """Generate audio using Polly and create a presigned URL."""
+    try:
+        polly = boto3.client('polly')
+        s3 = boto3.client('s3')
+        
+        # Generate audio using Polly
+        response = polly.start_speech_synthesis_task(
+            Engine='neural',
+            LanguageCode='en-US',
+            OutputFormat='mp3',
+            OutputS3BucketName=bucket_name,
+            OutputS3KeyPrefix=f"audio/{key_base}",
+            Text=text,
+            VoiceId='Matthew'
+        )
+        
+        # Get the task ID
+        task_id = response['SynthesisTask']['TaskId']
+        output_key = f"audio/{key_base}/{task_id}.mp3"
+        
+        # Generate presigned URL (valid for 1 hour)
+        presigned_url = s3.generate_presigned_url(
+            'get_object',
+            Params={
+                'Bucket': bucket_name,
+                'Key': output_key
+            },
+            ExpiresIn=3600
+        )
+        
+        return {
+            'audio_key': output_key,
+            'task_id': task_id,
+            'presigned_url': presigned_url
+        }
+        
+    except ClientError as e:
+        logger.error(f"Error generating audio: {str(e)}")
+        raise
 
 def lambda_handler(event, context):
     logger.info("Lambda function started")
@@ -68,14 +110,23 @@ def lambda_handler(event, context):
         # Save extracted text to the extracted-text/ folder in S3
         save_text_to_s3(bucket, decoded_key, full_text)
 
-        # Prepare response with metadata and page count
+        # Generate audio and get presigned URL
+        key_base = decoded_key.replace('.pdf', '')
+        audio_info = generate_audio_and_url(full_text, bucket, key_base)
+
+        # Prepare response with metadata, page count, and audio URL
         response = {
             'Metadata': metadata,
             'Number of Pages': num_pages,
-            'Text Saved To': f"s3://{bucket}/extracted-text/{decoded_key.replace('.pdf', '.txt')}"
+            'Text Saved To': f"s3://{bucket}/extracted-text/{decoded_key.replace('.pdf', '.txt')}",
+            'Audio': {
+                'TaskId': audio_info['task_id'],
+                'AudioKey': audio_info['audio_key'],
+                'PreSignedUrl': audio_info['presigned_url']
+            }
         }
         
-        logger.info(f"Extracted Metadata and Text Saved: {response}")
+        logger.info(f"Extracted Metadata, Text Saved, and Audio Generated: {response}")
         return {
             'statusCode': 200,
             'body': json.dumps(response)
