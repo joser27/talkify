@@ -16,7 +16,11 @@ echo "📦 Creating deployment package..."
 if [ -f "$DEPLOY_ZIP" ]; then
     rm "$DEPLOY_ZIP"
 fi
-zip -r "$DEPLOY_ZIP" "$SRC_DIR" -x "**/__pycache__/*" > /dev/null
+
+# Change to the source directory first, then zip
+cd "$SRC_DIR"
+zip -r "../$DEPLOY_ZIP" . -x "**/__pycache__/*" > /dev/null
+cd ..
 echo "✅ Deployment package created: $DEPLOY_ZIP"
 
 # Deploy to AWS Lambda
