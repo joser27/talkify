@@ -12,15 +12,24 @@ def lambda_handler(event, context):
     logger.info("Lambda function started")
     
     try:
+        # Log the entire event for debugging
+        logger.info(f"Received event: {json.dumps(event)}")
+        
         # Extract bucket name and object key from the S3 event
         record = event['Records'][0]['s3']
         bucket = record['bucket']['name']
         key = record['object']['key']
         logger.info(f"Processing file: s3://{bucket}/{key}")
         
-        # Initialize S3 client
+        # Verify bucket exists
         s3 = boto3.client('s3')
-        
+        try:
+            s3.head_bucket(Bucket=bucket)
+            logger.info(f"Successfully connected to bucket: {bucket}")
+        except Exception as e:
+            logger.error(f"Error accessing bucket {bucket}: {str(e)}")
+            raise
+            
         # Retrieve the PDF file from S3
         file_obj = s3.get_object(Bucket=bucket, Key=key)
         file_content = file_obj['Body'].read()
